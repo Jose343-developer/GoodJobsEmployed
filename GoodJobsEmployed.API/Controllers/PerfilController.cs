@@ -30,4 +30,20 @@ public class PerfilController : ControllerBase
             return BadRequest(result);
         }
     }
+
+    [HttpGet("{idPerfil}")]
+    public IActionResult GetByIdPerfil(int idPerfil)
+    {
+        // Llamamos al método de la capa BL que desarrollaste
+        var result = _perfilBL.GetByIdPerfil(idPerfil);
+
+        if (result.Correct)
+        {
+            return Ok(result);
+        }
+        else
+        {
+            return BadRequest(result);
+        }
+    }
 }
