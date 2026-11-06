@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using GoodJobsEmployed.API.BL;
+using ML = GoodJobsEmployed.API.ML;
 
 namespace GoodJobsEmployed.API.Controllers;
 
@@ -15,7 +16,7 @@ public class PerfilController : ControllerBase
         _perfilBL = perfilBL;
     }
 
-    [HttpGet]
+    [HttpGet("GetAll")]
     public IActionResult GetAll()
     {
         // Llamamos al método de la capa BL que desarrollaste
@@ -31,11 +32,63 @@ public class PerfilController : ControllerBase
         }
     }
 
-    [HttpGet("{idPerfil}")]
+    [HttpGet("GetPerfilById/{idPerfil}")]
     public IActionResult GetByIdPerfil(int idPerfil)
     {
         // Llamamos al método de la capa BL que desarrollaste
         var result = _perfilBL.GetByIdPerfil(idPerfil);
+
+        if (result.Correct)
+        {
+            return Ok(result);
+        }
+        else
+        {
+            return BadRequest(result);
+        }
+    }
+
+    [HttpPost("AddPerfil")]
+    public IActionResult AddPerfil([FromBody] ML.Perfil perfil)
+    {
+        // Llamamos al método de la capa BL que desarrollaste
+        var result = _perfilBL.AddPerfil(perfil);
+
+        if (result.Correct)
+        {
+            return Ok(result);
+        }
+        else
+        {
+            return BadRequest(result);
+        }
+    }
+
+    [HttpPut("UpdatePerfil/{idPerfil}")]
+    public IActionResult UpdatePerfil(int idPerfil, [FromBody] ML.Perfil perfil)
+    {
+        if (perfil == null)
+        {
+            return BadRequest(new ML.Result { Correct = false, ErrorMessage = "El cuerpo de la petición no puede estar vacío." });
+        }
+
+        perfil.IdPerfil = idPerfil;
+        var result = _perfilBL.UpdatePerfil(perfil);
+
+        if (result.Correct)
+        {
+            return Ok(result);
+        }
+        else
+        {
+            return BadRequest(result);
+        }
+    }
+
+    [HttpDelete("DeletePerfil/{idPerfil}")]
+    public IActionResult DeletePerfil(int idPerfil)
+    {
+        var result = _perfilBL.DeletePerfil(idPerfil);
 
         if (result.Correct)
         {

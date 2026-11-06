@@ -6,6 +6,12 @@
 # dotenv files
 .env
 
+# AI Agent tools and configs
+.agents/
+skills-lock.json
+AGENTS.md
+MEMORY.md
+
 # User-specific files
 *.rsuser
 *.suo
