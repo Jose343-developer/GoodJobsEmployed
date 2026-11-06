@@ -1,0 +1,101 @@
+.hero-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3.5rem 1.5rem;
+}
+
+.hero-card {
+  max-width: 600px;
+  width: 100%;
+  padding: 3.5rem 2.5rem;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .hero-card {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.hero-title {
+  font-size: 2.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 1rem;
+  letter-spacing: 0.5px;
+}
+
+.hero-subtitle {
+  font-size: 1.35rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-bottom: 0.5rem;
+  line-height: 1.35;
+}
+
+/* Botones estilo Apple */
+.btn-apple {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding: 12px 28px;
+  border-radius: var(--apple-radius);
+  cursor: pointer;
+  transition: transform 0.15s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  letter-spacing: 0.3px;
+}
+
+.btn-apple:active {
+  transform: scale(0.98);
+}
+
+.btn-primary-custom {
+  background-color: var(--primary-accent);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(41, 183, 101, 0.25);
+}
+
+.btn-primary-custom:hover {
+  background-color: var(--primary-accent-hover);
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(41, 183, 101, 0.35);
+}
+
+.btn-secondary-custom {
+  background-color: transparent;
+  color: var(--primary-accent);
+  border: 2px solid var(--primary-accent);
+}
+
+.btn-secondary-custom:hover {
+  background-color: var(--primary-accent);
+  color: #ffffff;
+  box-shadow: 0 6px 16px rgba(41, 183, 101, 0.25);
+}
+
+@media (max-width: 576px) {
+  .hero-card {
+    padding: 2.25rem 1.5rem;
+  }
+
+  .hero-title {
+    font-size: 2.1rem;
+  }
+
+  .hero-subtitle {
+    font-size: 1.15rem;
+  }
+
+  .btn-apple {
+    width: 100%;
+  }
+}

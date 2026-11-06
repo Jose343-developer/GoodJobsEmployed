@@ -1,1 +1,33 @@
-/* You can add global styles to this file, and also import other style files */
+@import "bootstrap/dist/css/bootstrap.min.css";
+
+:root {
+  --primary-accent: #29b765;
+  --primary-accent-hover: #23a058;
+  --bg-color: #ffffff;
+  --text-color: #1c1d1f;
+  --text-muted: #6e6e73;
+  --border-color: #e5e5ea;
+  --surface-color: #f5f5f7;
+  --apple-radius: 14px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #1c1c1e;
+    --text-color: #ffffff;
+    --text-muted: #a1a1a6;
+    --border-color: #38383a;
+    --surface-color: #2c2c2e;
+  }
+}
+
+html, body {
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Barlow Condensed', sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.25s ease, color 0.25s ease;
+  -webkit-font-smoothing: antialiased;
+}

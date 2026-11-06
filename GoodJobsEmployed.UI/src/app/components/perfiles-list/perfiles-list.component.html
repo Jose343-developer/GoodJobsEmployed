@@ -1,0 +1,145 @@
+<div class="perfiles-container">
+  <div class="container py-4">
+    <!-- Barra superior con botón de regreso -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+      <a routerLink="/" class="btn-apple btn-back">
+        <svg
+          class="back-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span>Volver al inicio</span>
+      </a>
+
+      <div class="header-info">
+        <h2 class="view-title">Perfiles Registrados</h2>
+        @if (!isLoading() && !errorMessage() && perfiles().length > 0) {
+          <span class="total-badge">{{ perfiles().length }} perfiles</span>
+        }
+      </div>
+    </div>
+
+    <!-- Estado de Error de Conexión -->
+    @if (errorMessage()) {
+      <div class="error-card text-center my-5">
+        <div class="error-icon-wrapper">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="error-icon"
+          >
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <h3 class="error-title">Problema de conexión</h3>
+        <p class="error-desc">{{ errorMessage() }}</p>
+        <div class="d-flex justify-content-center gap-3 mt-4">
+          <a routerLink="/" class="btn-apple btn-primary-custom text-decoration-none">
+            Volver al inicio
+          </a>
+          <button type="button" class="btn-apple btn-secondary-custom" (click)="cargarPerfiles()">
+            Reintentar
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Estado de Carga -->
+    @if (isLoading()) {
+      <div class="loading-state text-center my-5">
+        <div class="apple-spinner"></div>
+        <p class="loading-text mt-3">Cargando perfiles...</p>
+      </div>
+    }
+
+    <!-- Estado sin perfiles -->
+    @if (!isLoading() && !errorMessage() && perfiles().length === 0) {
+      <div class="empty-card text-center my-5">
+        <h3 class="empty-title">Sin perfiles disponibles</h3>
+        <p class="empty-desc">No se encontraron perfiles registrados en el sistema.</p>
+        <a routerLink="/" class="btn-apple btn-secondary-custom text-decoration-none mt-3">
+          Volver al inicio
+        </a>
+      </div>
+    }
+
+    <!-- Grid de Cards de Perfiles -->
+    @if (!isLoading() && !errorMessage() && perfiles().length > 0) {
+      <div class="cards-grid">
+        @for (perfil of paginatedPerfiles(); track perfil.idPerfil) {
+          <button
+            type="button"
+            class="perfil-card"
+            (click)="onSelectPerfil(perfil)"
+            title="Ver detalles de {{ perfil.nombre }}"
+          >
+            <div class="icon-avatar">
+              <!-- Icono vectorial limpio de perfil no genérico -->
+              <svg
+                class="avatar-svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <h3 class="perfil-name">{{ perfil.nombre }}</h3>
+          </button>
+        }
+      </div>
+
+      <!-- Controles de Paginación (10 por página) -->
+      @if (totalPages() > 1) {
+        <div class="pagination-wrapper mt-5">
+          <button
+            type="button"
+            class="pagination-btn"
+            [disabled]="currentPage() === 1"
+            (click)="previousPage()"
+          >
+            Anterior
+          </button>
+
+          <div class="pagination-pages">
+            @for (page of [].constructor(totalPages()); track $index) {
+              <button
+                type="button"
+                class="page-number-btn"
+                [class.active]="currentPage() === $index + 1"
+                (click)="goToPage($index + 1)"
+              >
+                {{ $index + 1 }}
+              </button>
+            }
+          </div>
+
+          <button
+            type="button"
+            class="pagination-btn"
+            [disabled]="currentPage() === totalPages()"
+            (click)="nextPage()"
+          >
+            Siguiente
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>
