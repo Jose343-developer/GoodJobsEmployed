@@ -99,4 +99,19 @@ public class PerfilController : ControllerBase
             return BadRequest(result);
         }
     }
+
+    [HttpDelete("DeleteSkill/{idPerfil}/{idCaracteristica}")]
+    public IActionResult DeleteSkill(int idPerfil, int idCaracteristica)
+    {
+        var result = _perfilBL.DeleteSkill(idPerfil, idCaracteristica);
+
+        if (result.Correct)
+        {
+            return Ok(result);
+        }
+        else
+        {
+            return BadRequest(result);
+        }
+    }
 }

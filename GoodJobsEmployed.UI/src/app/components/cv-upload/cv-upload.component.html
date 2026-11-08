@@ -1,0 +1,268 @@
+<div class="cv-upload-container">
+  <div class="container py-4">
+    <!-- Barra superior con botón de regreso -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+      <a routerLink="/" class="btn-apple btn-back">
+        <svg
+          class="back-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span>Volver al inicio</span>
+      </a>
+
+      <div class="d-flex align-items-center gap-3">
+        @if (archivosCargados().length > 0) {
+          <span class="total-badge">{{ archivosCargados().length }} archivos cargados</span>
+          <button
+            type="button"
+            class="btn-apple btn-secondary-custom btn-sm-action"
+            (click)="limpiarTodos()"
+            [disabled]="isAnalizando()"
+            title="Quitar todos los archivos"
+          >
+            Limpiar todo
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Encabezado de la Sección -->
+    <div class="upload-header-box mb-4">
+      <div>
+        <span class="eyebrow-text">Recepción y Evaluación de Candidatos</span>
+        <h1 class="view-title">Evaluación de Currículums</h1>
+        <p class="view-subtitle">
+          Elige el perfil profesional a evaluar, arrastra los CVs de los candidatos y procesa el análisis contra la API.
+        </p>
+      </div>
+    </div>
+
+    <!-- Selector de Perfil Destino (solo perfiles con skills configuradas) -->
+    <div class="perfil-select-card mb-4">
+      <label for="selectPerfilEvaluacion" class="select-label">
+        <span class="step-badge">Paso 1</span>
+        <span>Selecciona el Perfil a Evaluar</span>
+      </label>
+      <div class="select-wrapper">
+        <select
+          id="selectPerfilEvaluacion"
+          class="apple-select"
+          [ngModel]="selectedPerfilId()"
+          (ngModelChange)="selectedPerfilId.set($event)"
+          [disabled]="isAnalizando() || isLoadingPerfiles() || perfilesConSkills().length === 0"
+        >
+          <option [ngValue]="null" disabled selected>
+            @if (isLoadingPerfiles()) {
+              Cargando perfiles...
+            } @else if (perfilesConSkills().length === 0) {
+              No hay perfiles con skills configuradas. Ve a 'Ver Perfiles' para configurar al menos una.
+            } @else {
+              -- Elige un perfil profesional registrado ({{ perfilesConSkills().length }} disponibles) --
+            }
+          </option>
+          @for (perfil of perfilesConSkills(); track perfil.idPerfil) {
+            <option [ngValue]="perfil.idPerfil">
+              {{ perfil.nombre }} ({{ getSkillsCount(perfil) }} skills)
+            </option>
+          }
+        </select>
+      </div>
+      @if (perfilesConSkills().length === 0 && !isLoadingPerfiles()) {
+        <span class="select-hint">
+          No hay perfiles con skills configuradas. Ve a <a routerLink="/perfiles" class="link-perfiles">Ver Perfiles</a> para configurar al menos una.
+        </span>
+      } @else if (!selectedPerfilId()) {
+        <span class="select-hint">Debes elegir un perfil para poder activar la evaluación de los CVs.</span>
+      }
+    </div>
+
+    <!-- Aviso de formato no compatible si ocurrió -->
+    @if (advertenciaFormato()) {
+      <div class="format-warning-alert mb-4">
+        <div class="d-flex align-items-center justify-content-between gap-3">
+          <div class="d-flex align-items-center gap-2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="warning-svg"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>{{ advertenciaFormato() }}</span>
+          </div>
+          <button
+            type="button"
+            class="btn-close-alert"
+            (click)="advertenciaFormato.set(null)"
+            aria-label="Cerrar aviso"
+          >
+            &times;
+          </button>
+        </div>
+      </div>
+    }
+
+    <!-- Zona de Arrastrar y Soltar (Drag & Drop Zone) -->
+    <div
+      class="apple-dropzone"
+      [class.drag-over]="isDragOver()"
+      [class.dropzone-disabled]="isAnalizando()"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      (drop)="onDrop($event)"
+      (click)="!isAnalizando() && fileInput.click()"
+      (keyup.enter)="!isAnalizando() && fileInput.click()"
+      tabindex="0"
+      role="button"
+      aria-label="Zona para arrastrar y soltar currículums"
+    >
+      <input
+        #fileInput
+        type="file"
+        multiple
+        accept=".pdf,.docx"
+        class="d-none"
+        [disabled]="isAnalizando()"
+        (change)="onFileSelected($event)"
+      />
+
+      <div class="dropzone-content text-center">
+        <div class="dropzone-icon-circle">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="upload-svg"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+
+        <h3 class="dropzone-title">
+          {{ isDragOver() ? 'Suelta los archivos aquí' : 'Paso 2: Arrastra y suelta tus CVs aquí' }}
+        </h3>
+        <p class="dropzone-desc">o haz clic para seleccionar documentos desde tu dispositivo</p>
+        <span class="dropzone-formats">Archivos soportados: PDF (.pdf) y Word (.docx)</span>
+      </div>
+    </div>
+
+    <!-- Lista de Archivos Cargados y Barra de Ejecución -->
+    @if (archivosCargados().length > 0) {
+      <div class="files-section mt-5">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <h2 class="section-title">Documentos Listos ({{ archivosCargados().length }})</h2>
+        </div>
+
+        <div class="files-grid mb-4">
+          @for (item of archivosCargados(); track item.id) {
+            <div class="file-card">
+              <div class="file-card-info">
+                <span class="file-ext-badge" [class.badge-pdf]="item.extension === 'PDF'" [class.badge-docx]="item.extension === 'DOCX'">
+                  {{ item.extension }}
+                </span>
+                <div class="file-texts">
+                  <span class="file-name" [title]="item.nombre">{{ item.nombre }}</span>
+                  <span class="file-size">{{ item.tamanoFormateado }}</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                class="btn-remove-file"
+                (click)="removerArchivo(item.id)"
+                [disabled]="isAnalizando()"
+                title="Quitar {{ item.nombre }}"
+                aria-label="Quitar archivo"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="remove-svg"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+          }
+        </div>
+
+        <!-- Tarjeta de Acción: Iniciar Análisis Secuencial -->
+        <div class="analisis-action-card">
+          <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div>
+              <h3 class="action-card-title">Paso 3: Ejecutar Evaluación</h3>
+              <p class="action-card-desc">
+                @if (selectedPerfilId()) {
+                  Se enviarán {{ archivosCargados().length }} archivo(s) de uno en uno para su evaluación en la API.
+                } @else {
+                  Selecciona primero un perfil en el Paso 1 para activar el análisis.
+                }
+              </p>
+            </div>
+
+            <button
+              type="button"
+              class="btn-apple btn-primary-custom btn-analizar d-inline-flex align-items-center gap-2"
+              [disabled]="!selectedPerfilId() || isAnalizando()"
+              (click)="onIniciarAnalisis()"
+            >
+              @if (isAnalizando()) {
+                <span class="apple-spinner-sm"></span>
+                <span>Procesando {{ progresoActual() }}/{{ progresoTotal() }}...</span>
+              } @else {
+                <svg
+                  class="play-svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  stroke="none"
+                >
+                  <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                <span>Analizar CVs</span>
+              }
+            </button>
+          </div>
+
+          <!-- Barra de Progreso Secuencial -->
+          @if (isAnalizando()) {
+            <div class="progress-box mt-3">
+              <div class="progress-bar-bg">
+                <div
+                  class="progress-bar-fill"
+                  [style.width.%]="getProgresoPorcentaje()"
+                ></div>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mt-2 progress-status-text">
+                <span>Enviando documento a la API: <strong>{{ archivoEnProceso() }}</strong></span>
+                <span>{{ progresoActual() }} de {{ progresoTotal() }} ({{ getProgresoPorcentaje() }}%)</span>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

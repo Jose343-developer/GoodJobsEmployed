@@ -1,6 +1,6 @@
 <div class="perfiles-container">
   <div class="container py-4">
-    <!-- Barra superior con botón de regreso -->
+    <!-- Barra superior con botón de regreso y agregar perfil -->
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
       <a routerLink="/" class="btn-apple btn-back">
         <svg
@@ -17,11 +17,34 @@
         <span>Volver al inicio</span>
       </a>
 
-      <div class="header-info">
-        <h2 class="view-title">Perfiles Registrados</h2>
-        @if (!isLoading() && !errorMessage() && perfiles().length > 0) {
-          <span class="total-badge">{{ perfiles().length }} perfiles</span>
-        }
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div class="header-info">
+          <h2 class="view-title">Perfiles Registrados</h2>
+          @if (!isLoading() && !errorMessage() && perfiles().length > 0) {
+            <span class="total-badge">{{ perfiles().length }} perfiles</span>
+          }
+        </div>
+
+        <button
+          type="button"
+          class="btn-apple btn-primary-custom d-inline-flex align-items-center gap-2"
+          (click)="onAgregarPerfil()"
+          title="Agregar nuevo perfil"
+        >
+          <svg
+            class="action-icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span>Agregar Perfil</span>
+        </button>
       </div>
     </div>
 
@@ -79,12 +102,61 @@
     @if (!isLoading() && !errorMessage() && perfiles().length > 0) {
       <div class="cards-grid">
         @for (perfil of paginatedPerfiles(); track perfil.idPerfil) {
-          <button
-            type="button"
+          <div
             class="perfil-card"
             (click)="onSelectPerfil(perfil)"
-            title="Ver detalles de {{ perfil.nombre }}"
+            (keyup.enter)="onSelectPerfil(perfil)"
+            title="Ver características de {{ perfil.nombre }}"
+            role="button"
+            tabindex="0"
           >
+            <!-- Acciones visuales del perfil: Editar y Eliminar -->
+            <div class="card-actions">
+              <button
+                type="button"
+                class="btn-card-action btn-edit-perfil"
+                (click)="onEditPerfil($event, perfil)"
+                title="Editar nombre de {{ perfil.nombre }}"
+                aria-label="Editar nombre de perfil"
+              >
+                <svg
+                  class="action-icon-svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </button>
+
+              <button
+                type="button"
+                class="btn-card-action btn-delete-perfil"
+                (click)="onDeletePerfil($event, perfil)"
+                title="Eliminar perfil {{ perfil.nombre }}"
+                aria-label="Eliminar perfil"
+              >
+                <svg
+                  class="action-icon-svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </button>
+            </div>
+
             <div class="icon-avatar">
               <!-- Icono vectorial limpio de perfil no genérico -->
               <svg
@@ -101,7 +173,7 @@
               </svg>
             </div>
             <h3 class="perfil-name">{{ perfil.nombre }}</h3>
-          </button>
+          </div>
         }
       </div>
 
@@ -140,6 +212,291 @@
           </button>
         </div>
       }
+    }
+
+    <!-- Modal para editar únicamente el nombre del perfil -->
+    @if (isEditModalOpen()) {
+      <div class="modal-backdrop" (click)="onCloseEditModal()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div class="d-flex align-items-center gap-3">
+              <div class="modal-icon-badge">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="modal-svg"
+                >
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="modal-title">Editar Nombre del Perfil</h3>
+                <span class="modal-subtitle">Modifica únicamente el nombre del perfil</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="btn-modal-close"
+              (click)="onCloseEditModal()"
+              [disabled]="isSavingEdit()"
+              aria-label="Cerrar modal"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="close-svg"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div class="modal-body my-3">
+            <label for="inputPerfilNombre" class="form-label">Nombre del Perfil</label>
+            <input
+              id="inputPerfilNombre"
+              type="text"
+              class="apple-input"
+              maxlength="50"
+              [ngModel]="editNombre()"
+              (ngModelChange)="editNombre.set($event)"
+              placeholder="Ej. Desarrollador .NET"
+              [disabled]="isSavingEdit()"
+              (keyup.enter)="onGuardarEditPerfil()"
+              autofocus
+            />
+
+            @if (editErrorMessage()) {
+              <div class="modal-error-alert mt-2">
+                {{ editErrorMessage() }}
+              </div>
+            }
+          </div>
+
+          <div class="modal-footer d-flex justify-content-end gap-2">
+            <button
+              type="button"
+              class="btn-apple btn-secondary-custom"
+              (click)="onCloseEditModal()"
+              [disabled]="isSavingEdit()"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="btn-apple btn-primary-custom d-inline-flex align-items-center gap-2"
+              (click)="onGuardarEditPerfil()"
+              [disabled]="isSavingEdit()"
+            >
+              @if (isSavingEdit()) {
+                <span class="apple-spinner-sm"></span>
+                <span>Guardando...</span>
+              } @else {
+                <span>Guardar Cambios</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Modal para crear un nuevo perfil -->
+    @if (isAddModalOpen()) {
+      <div class="modal-backdrop" (click)="onCloseAddModal()">
+        <div class="modal-card" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div class="d-flex align-items-center gap-3">
+              <div class="modal-icon-badge">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="modal-svg"
+                >
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                  <line x1="20" y1="8" x2="20" y2="14"></line>
+                  <line x1="23" y1="11" x2="17" y2="11"></line>
+                </svg>
+              </div>
+              <div>
+                <h3 class="modal-title">Crear Nuevo Perfil</h3>
+                <span class="modal-subtitle">Ingresa el nombre del perfil profesional</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="btn-modal-close"
+              (click)="onCloseAddModal()"
+              [disabled]="isSavingAdd()"
+              aria-label="Cerrar modal"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="close-svg"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div class="modal-body my-3">
+            <label for="inputNuevoPerfilNombre" class="form-label">Nombre del Perfil</label>
+            <input
+              id="inputNuevoPerfilNombre"
+              type="text"
+              class="apple-input"
+              maxlength="50"
+              [ngModel]="newPerfilNombre()"
+              (ngModelChange)="newPerfilNombre.set($event)"
+              placeholder="Ej. Desarrollador Backend .NET"
+              [disabled]="isSavingAdd()"
+              (keyup.enter)="onGuardarNuevoPerfil()"
+              autofocus
+            />
+
+            @if (addErrorMessage()) {
+              <div class="modal-error-alert mt-2">
+                {{ addErrorMessage() }}
+              </div>
+            }
+          </div>
+
+          <div class="modal-footer d-flex justify-content-end gap-2">
+            <button
+              type="button"
+              class="btn-apple btn-secondary-custom"
+              (click)="onCloseAddModal()"
+              [disabled]="isSavingAdd()"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="btn-apple btn-primary-custom d-inline-flex align-items-center gap-2"
+              (click)="onGuardarNuevoPerfil()"
+              [disabled]="isSavingAdd()"
+            >
+              @if (isSavingAdd()) {
+                <span class="apple-spinner-sm"></span>
+                <span>Creando...</span>
+              } @else {
+                <span>Crear Perfil</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Modal de confirmación para eliminar perfil estilo Apple -->
+    @if (isDeleteModalOpen()) {
+      <div class="modal-backdrop" (click)="onCloseDeleteModal()">
+        <div class="modal-card modal-delete-card" (click)="$event.stopPropagation()">
+          <div class="modal-header">
+            <div class="d-flex align-items-center gap-3">
+              <div class="modal-icon-badge modal-icon-badge-danger">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="modal-svg"
+                >
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+              </div>
+              <div>
+                <h3 class="modal-title">¿Eliminar Perfil?</h3>
+                <span class="modal-subtitle">Esta acción no se puede deshacer</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              class="btn-modal-close"
+              (click)="onCloseDeleteModal()"
+              [disabled]="isDeleting()"
+              aria-label="Cerrar modal"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="close-svg"
+              >
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div class="modal-body my-3">
+            <p class="delete-warning-text mb-2">
+              ¿Estás seguro de que deseas eliminar permanentemente el perfil <strong>{{ perfilToDelete()?.nombre }}</strong>?
+            </p>
+
+            @if (deleteErrorMessage()) {
+              <div class="modal-error-alert mt-2">
+                {{ deleteErrorMessage() }}
+              </div>
+            }
+          </div>
+
+          <div class="modal-footer d-flex justify-content-end gap-2">
+            <button
+              type="button"
+              class="btn-apple btn-secondary-custom"
+              (click)="onCloseDeleteModal()"
+              [disabled]="isDeleting()"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              class="btn-apple btn-destructive-custom d-inline-flex align-items-center gap-2"
+              (click)="onConfirmDelete()"
+              [disabled]="isDeleting()"
+            >
+              @if (isDeleting()) {
+                <span class="apple-spinner-sm"></span>
+                <span>Eliminando...</span>
+              } @else {
+                <span>Eliminar Perfil</span>
+              }
+            </button>
+          </div>
+        </div>
+      </div>
     }
   </div>
 </div>

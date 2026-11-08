@@ -1,0 +1,256 @@
+<div class="cv-ranking-container">
+  <div class="container py-4">
+    <!-- Barra superior de navegación -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+      <a routerLink="/subir-cvs" class="btn-apple btn-back">
+        <svg
+          class="nav-icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span>Volver a Subir CVs</span>
+      </a>
+
+      <div class="d-flex align-items-center gap-2">
+        <a routerLink="/perfiles" class="btn-apple btn-secondary-custom btn-sm-action">
+          Ver Perfiles
+        </a>
+      </div>
+    </div>
+
+    <!-- Encabezado de Ranking -->
+    <div class="ranking-header-card mb-4">
+      <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+          <span class="eyebrow-text">Resultados de Evaluación</span>
+          <h1 class="view-title">Ranking de Candidatos</h1>
+          <p class="view-subtitle">
+            Perfil Evaluado: <strong>{{ perfilNombre() || 'Perfil Profesional' }}</strong>
+          </p>
+        </div>
+
+        @if (rankingResultados().length > 0) {
+          <div class="d-flex align-items-center gap-3">
+            <div class="stat-pill">
+              <span class="stat-label">Evaluados</span>
+              <span class="stat-value">{{ rankingResultados().length }}</span>
+            </div>
+            @if (getCandidatosExitosos().length > 0) {
+              <div class="stat-pill">
+                <span class="stat-label">Promedio</span>
+                <span class="stat-value">{{ getPromedioCompatibilidad() }}%</span>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Estado Vacío -->
+    @if (rankingResultados().length === 0) {
+      <div class="empty-card text-center my-5">
+        <div class="empty-icon-circle">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="empty-svg"
+          >
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+        </div>
+        <h3 class="empty-title">Sin resultados de evaluación</h3>
+        <p class="empty-desc">
+          No hay currículums evaluados en esta sesión. Selecciona un perfil y sube los documentos para ver el ranking.
+        </p>
+        <a routerLink="/subir-cvs" class="btn-apple btn-primary-custom text-decoration-none mt-3">
+          Subir y Evaluar CVs
+        </a>
+      </div>
+    }
+
+    <!-- Lista de Candidatos Evaluados Exitosamente -->
+    @if (getCandidatosExitosos().length > 0) {
+      <div class="candidatos-list mb-4">
+        @for (candidato of getCandidatosExitosos(); track candidato.id; let i = $index) {
+          <div class="candidato-card" [class.top-card]="i === 0">
+            <div class="card-main-content">
+              <!-- Posición en el Ranking -->
+              <div class="rank-badge-wrapper">
+                <span class="rank-badge" [class.badge-gold]="i === 0" [class.badge-silver]="i === 1" [class.badge-bronze]="i === 2">
+                  #{{ i + 1 }}
+                </span>
+              </div>
+
+              <!-- Tacómetro SVG dinámico -->
+              <div class="gauge-wrapper">
+                <svg class="gauge-svg" viewBox="0 0 100 60">
+                  <!-- Arco base de fondo -->
+                  <path
+                    d="M 10 52 A 40 40 0 0 1 90 52"
+                    fill="none"
+                    stroke="var(--border-color)"
+                    stroke-width="8"
+                    stroke-linecap="round"
+                  />
+                  <!-- Arco dinámico coloreado según porcentaje -->
+                  <path
+                    d="M 10 52 A 40 40 0 0 1 90 52"
+                    fill="none"
+                    [attr.stroke]="getGaugeColor(candidato.resultado?.porcentajeCompatibilidad)"
+                    stroke-width="8"
+                    stroke-linecap="round"
+                    stroke-dasharray="125.66"
+                    [attr.stroke-dashoffset]="getDashOffset(candidato.resultado?.porcentajeCompatibilidad)"
+                    class="gauge-progress-arc"
+                  />
+                </svg>
+                <div class="gauge-text-center">
+                  <span class="gauge-percent" [style.color]="getGaugeColor(candidato.resultado?.porcentajeCompatibilidad)">
+                    {{ candidato.resultado?.porcentajeCompatibilidad }}%
+                  </span>
+                  <span class="gauge-caption">Compatibilidad</span>
+                </div>
+              </div>
+
+              <!-- Información del Candidato -->
+              <div class="candidato-info">
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                  <h3 class="candidato-filename" [title]="candidato.nombreArchivo">
+                    {{ candidato.nombreArchivo }}
+                  </h3>
+                  <span class="file-size-badge">{{ candidato.tamanoFormateado }}</span>
+                </div>
+
+                <p class="candidato-justificacion">
+                  {{ candidato.resultado?.justificacionGeneral || 'Sin observaciones generales provistas por el evaluador.' }}
+                </p>
+
+                <!-- Botón de Desglose de Evaluación -->
+                <button
+                  type="button"
+                  class="btn-toggle-detalle"
+                  (click)="toggleDetalle(candidato.id)"
+                  [attr.aria-expanded]="isExpanded(candidato.id)"
+                >
+                  <span>{{ isExpanded(candidato.id) ? 'Ocultar desglose de skills' : 'Ver desglose de evaluación (' + (candidato.resultado?.evaluacionDetallada?.length || 0) + ' skills)' }}</span>
+                  <svg
+                    class="chevron-svg"
+                    [class.chevron-open]="isExpanded(candidato.id)"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Acordeón Desplegable: Evaluación Detallada -->
+            @if (isExpanded(candidato.id)) {
+              <div class="detalles-panel mt-3">
+                <h4 class="detalles-title">Evaluación por Competencia Requerida</h4>
+                <div class="skills-eval-grid">
+                  @for (skill of candidato.resultado?.evaluacionDetallada; track skill.idCaracteristica) {
+                    <div class="skill-eval-item" [class.skill-cumple]="skill.cumple" [class.skill-no-cumple]="!skill.cumple">
+                      <div class="skill-eval-top">
+                        <div class="d-flex align-items-center gap-2">
+                          <div class="status-icon-badge" [class.status-pass]="skill.cumple" [class.status-fail]="!skill.cumple">
+                            @if (skill.cumple) {
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="check-svg">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                              </svg>
+                            } @else {
+                              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="cross-svg">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                              </svg>
+                            }
+                          </div>
+                          <div>
+                            <span class="skill-eval-name">{{ skill.nombreCaracteristica }}</span>
+                            <span class="skill-status-tag">{{ skill.cumple ? 'Cumple requerimiento' : 'No cumple' }}</span>
+                          </div>
+                        </div>
+
+                        <div class="text-end">
+                          <span class="skill-score-val">{{ skill.puntajeObtenido }} pts</span>
+                          <span class="skill-weight-tag">Peso: {{ skill.pesoPrioridad }} pts</span>
+                        </div>
+                      </div>
+
+                      @if (skill.criterioEspecifico) {
+                        <p class="skill-criterio-text mt-2">
+                          <strong>Criterio:</strong> {{ skill.criterioEspecifico }}
+                        </p>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Sección de Documentos con Error en la Evaluación -->
+    @if (getCandidatosConError().length > 0) {
+      <div class="errores-section mt-4">
+        <h3 class="errores-title">Documentos con Error de Procesamiento ({{ getCandidatosConError().length }})</h3>
+        <p class="errores-desc">
+          Los siguientes currículums no pudieron ser procesados por inconvenientes de conexión con la API o la base de datos:
+        </p>
+
+        <div class="errores-grid">
+          @for (item of getCandidatosConError(); track item.id) {
+            <div class="error-cv-card">
+              <div class="d-flex align-items-start gap-3">
+                <div class="error-icon-box">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    class="error-svg"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                </div>
+                <div class="flex-grow-1">
+                  <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                    <span class="error-filename">{{ item.nombreArchivo }}</span>
+                    <span class="file-size-badge">{{ item.tamanoFormateado }}</span>
+                  </div>
+                  <p class="error-cause mt-1 mb-0">
+                    {{ item.mensajeError }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>

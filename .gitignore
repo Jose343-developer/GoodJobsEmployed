@@ -11,6 +11,8 @@
 skills-lock.json
 AGENTS.md
 MEMORY.md
+.local/
+Library/
 
 # User-specific files
 *.rsuser

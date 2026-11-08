@@ -75,22 +75,19 @@ _context = context;
         return result;
     }
 
-    public ML.Result GetByIdPerfil(int idPerfil){
+    public ML.Result GetByIdPerfil(int idPerfil)
+    {
+        ML.Result result = new ML.Result();
+        try
+        {
+            var context = _context;
+            var query = context.PerfilGetByIdPerfils.FromSqlInterpolated($"Exec GetPerfilById @idPerfil = {idPerfil}").ToList();
 
-            ML.Result result = new ML.Result();
-            try{
+            result.Objects = new List<object>();
 
-                var context = _context;
-                var query = context.PerfilGetByIdPerfils.FromSqlInterpolated($"Exec GetPerfilById @idPerfil = {idPerfil}").ToList();
-
-
-if (query.Count > 0)
-
-
+            if (query.Count > 0)
             {
-                result.Objects = new List<object>();
-
-                // Aquí agrupamos por Perfil usando LINQ
+                // Agrupamos por Perfil usando LINQ
                 var perfilesAgrupados = query.GroupBy(p => new { p.idPerfil, p.nombre })
                     .Select(grupo => new 
                     {
@@ -108,31 +105,23 @@ if (query.Count > 0)
                         }).ToList()
                     }).ToList();
 
-                // Llenamos result.Objects con nuestra nueva estructura
                 foreach (var item in perfilesAgrupados)
                 {
                     result.Objects.Add(item);
                 }
-                
-                result.Correct = true;
             }
-            else 
-            {
-                result.Correct = false;
-                result.ErrorMessage = "No se encontro ningun perfil";
-            }
-            
-            return result;  
 
-
-
-            }catch(Exception ex){
-
-                result.Correct = false;
-                result.Ex = ex;
-                result.ErrorMessage = ex.Message;
-                return result;
-            }
+            result.Correct = true;
+            result.ErrorMessage = null;
+            return result;
+        }
+        catch (Exception ex)
+        {
+            result.Correct = false;
+            result.Ex = ex;
+            result.ErrorMessage = ex.Message;
+            return result;
+        }
     }
 
     public ML.Result AddPerfil(ML.Perfil perfil)
@@ -206,7 +195,72 @@ if (query.Count > 0)
             // Ejecutamos el Stored Procedure cadPerfil con @opcion = 2 (Update):
             int rowsAffected = context.Database.ExecuteSqlInterpolated($"Exec cadPerfil @opcion = 2, @idPerfil = {perfil.IdPerfil}, @nombrePerfil = {nombreActualizado}");
 
-            if (rowsAffected > 0)
+            // Procesar características asociadas si se proporcionaron
+            if (perfil.PerfilCaracteristicas != null && perfil.PerfilCaracteristicas.Count > 0)
+            {
+                foreach (var pc in perfil.PerfilCaracteristicas)
+                {
+                    int idCaracteristica = pc.IdCaracteristica;
+                    if (idCaracteristica <= 0 && pc.Caracteristica != null && !string.IsNullOrWhiteSpace(pc.Caracteristica.NombreCaracteristica))
+                    {
+                        var nuevaCarac = new Data.Models.Caracteristica
+                        {
+                            NombreCaracteristica = pc.Caracteristica.NombreCaracteristica.Trim(),
+                            DescripcionCaracteristica = pc.Caracteristica.DescripcionCaracteristica?.Trim()
+                        };
+                        context.Caracteristicas.Add(nuevaCarac);
+                        context.SaveChanges();
+                        idCaracteristica = nuevaCarac.IdCaracteristica;
+                    }
+
+                    if (idCaracteristica > 0)
+                    {
+                        var relacionExistente = context.PerfilCaracteristicas
+                            .FirstOrDefault(r => r.IdPerfil == perfil.IdPerfil && r.IdCaracteristica == idCaracteristica);
+
+                        byte? pesoCalculado = pc.PesoPrioridad.HasValue ? (byte)Math.Clamp(pc.PesoPrioridad.Value, 1, 100) : null;
+
+                        if (relacionExistente == null)
+                        {
+                            var nuevaRelacion = new Data.Models.PerfilCaracteristica
+                            {
+                                IdPerfil = perfil.IdPerfil,
+                                IdCaracteristica = idCaracteristica,
+                                PesoPrioridad = pesoCalculado,
+                                CriterioEspecifico = pc.CriterioEspecifico?.Trim()
+                            };
+                            context.PerfilCaracteristicas.Add(nuevaRelacion);
+                        }
+                        else
+                        {
+                            if (pesoCalculado.HasValue)
+                            {
+                                relacionExistente.PesoPrioridad = pesoCalculado;
+                            }
+                            if (pc.CriterioEspecifico != null)
+                            {
+                                relacionExistente.CriterioEspecifico = pc.CriterioEspecifico.Trim();
+                            }
+                        }
+
+                        var caracExistente = context.Caracteristicas.FirstOrDefault(c => c.IdCaracteristica == idCaracteristica);
+                        if (caracExistente != null && pc.Caracteristica != null)
+                        {
+                            if (!string.IsNullOrWhiteSpace(pc.Caracteristica.NombreCaracteristica))
+                            {
+                                caracExistente.NombreCaracteristica = pc.Caracteristica.NombreCaracteristica.Trim();
+                            }
+                            if (pc.Caracteristica.DescripcionCaracteristica != null)
+                            {
+                                caracExistente.DescripcionCaracteristica = pc.Caracteristica.DescripcionCaracteristica.Trim();
+                            }
+                        }
+                        context.SaveChanges();
+                    }
+                }
+            }
+
+            if (rowsAffected > 0 || (perfil.PerfilCaracteristicas != null && perfil.PerfilCaracteristicas.Count > 0))
             {
                 result.Correct = true;
             }
@@ -255,6 +309,44 @@ if (query.Count > 0)
             {
                 result.Correct = false;
                 result.ErrorMessage = "No se encontró el perfil a eliminar.";
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            result.Correct = false;
+            result.Ex = ex;
+            result.ErrorMessage = ex.Message;
+            return result;
+        }
+    }
+
+    public ML.Result DeleteSkill(int idPerfil, int idCaracteristica)
+    {
+        ML.Result result = new ML.Result();
+        try
+        {
+            if (idPerfil <= 0 || idCaracteristica <= 0)
+            {
+                result.Correct = false;
+                result.ErrorMessage = "Los identificadores del perfil y de la característica deben ser mayores a 0.";
+                return result;
+            }
+
+            var context = _context;
+
+            // Ejecutamos el Stored Procedure cadCaracteristica con @opcion = 3 (Delete)
+            int rowsAffected = context.Database.ExecuteSqlInterpolated($"Exec cadCaracteristica @opcion = 3, @idCaracteristica = {idCaracteristica}, @idPerfil = {idPerfil}");
+
+            if (rowsAffected > 0)
+            {
+                result.Correct = true;
+            }
+            else
+            {
+                result.Correct = false;
+                result.ErrorMessage = "No se encontró la característica para eliminar.";
             }
 
             return result;

@@ -59,6 +59,7 @@
 }
 
 .perfil-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -69,18 +70,86 @@
   border-radius: 18px;
   cursor: pointer;
   outline: none;
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s, box-shadow 0.2s, background-color 0.2s;
   width: 100%;
 }
 
 .perfil-card:hover {
   transform: translateY(-5px);
+  background-color: var(--primary-accent);
   border-color: var(--primary-accent);
-  box-shadow: 0 8px 24px rgba(41, 183, 101, 0.16);
+  box-shadow: 0 10px 24px rgba(41, 183, 101, 0.25);
+}
+
+.perfil-card:hover .perfil-name,
+.perfil-card:hover .icon-avatar {
+  color: #ffffff;
+}
+
+.perfil-card:hover .icon-avatar {
+  background-color: rgba(255, 255, 255, 0.22);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.perfil-card:hover .btn-card-action {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .perfil-card:active {
   transform: translateY(-2px) scale(0.99);
+}
+
+.card-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 6px;
+  z-index: 2;
+}
+
+.btn-card-action {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.btn-card-action:hover {
+  transform: scale(1.08);
+}
+
+.btn-edit-perfil:hover {
+  border-color: #ffffff;
+  color: #ffffff;
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.btn-delete-perfil:hover {
+  border-color: #dc3545;
+  color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.15);
+}
+
+.perfil-card:hover .btn-delete-perfil:hover {
+  background-color: #dc3545;
+  border-color: #dc3545;
+  color: #ffffff;
+}
+
+.action-icon-svg {
+  width: 15px;
+  height: 15px;
 }
 
 .icon-avatar {
@@ -102,12 +171,6 @@
   height: 24px;
 }
 
-.perfil-card:hover .icon-avatar {
-  border-color: var(--primary-accent);
-  color: var(--primary-accent);
-  background-color: rgba(41, 183, 101, 0.08);
-}
-
 .perfil-name {
   font-size: 1.35rem;
   font-weight: 600;
@@ -115,10 +178,6 @@
   color: var(--text-color);
   word-break: break-word;
   transition: color 0.2s ease;
-}
-
-.perfil-card:hover .perfil-name {
-  color: var(--primary-accent);
 }
 
 .pagination-wrapper {
@@ -242,6 +301,186 @@
   background-color: transparent;
   color: var(--primary-accent);
   border: 2px solid var(--primary-accent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .perfil-card:hover {
+    background-color: var(--surface-color);
+    border-color: var(--primary-accent);
+    box-shadow: 0 8px 24px rgba(41, 183, 101, 0.2);
+  }
+  .perfil-card:hover .perfil-name {
+    color: var(--primary-accent);
+  }
+  .perfil-card:hover .icon-avatar {
+    background-color: rgba(41, 183, 101, 0.12);
+    border-color: var(--primary-accent);
+    color: var(--primary-accent);
+  }
+  .perfil-card:hover .btn-edit-perfil {
+    background-color: var(--bg-color);
+    color: var(--text-muted);
+  }
+  .perfil-card:hover .btn-edit-perfil:hover {
+    color: var(--primary-accent);
+    border-color: var(--primary-accent);
+  }
+}
+
+.action-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* Modal de edición de perfil estilo Apple */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 1rem;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 480px;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 1.75rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25);
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.modal-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background-color: rgba(41, 183, 101, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-accent);
+}
+
+.modal-svg,
+.close-svg {
+  width: 20px;
+  height: 20px;
+}
+
+.modal-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.modal-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+}
+
+.btn-modal-close {
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-modal-close:hover {
+  color: var(--text-color);
+  border-color: var(--text-color);
+}
+
+.form-label {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  display: block;
+}
+
+.apple-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 1.15rem;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-color);
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.apple-input:focus {
+  border-color: var(--primary-accent);
+  box-shadow: 0 0 0 3px rgba(41, 183, 101, 0.2);
+}
+
+.modal-error-alert {
+  color: #dc3545;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.apple-spinner-sm {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+.modal-icon-badge-danger {
+  background-color: rgba(220, 53, 69, 0.12);
+  color: #dc3545;
+  border: 1px solid rgba(220, 53, 69, 0.25);
+}
+
+.delete-warning-text {
+  font-size: 1.15rem;
+  line-height: 1.5;
+  color: var(--text-color);
+  margin: 0;
+}
+
+.btn-destructive-custom {
+  background-color: rgba(220, 53, 69, 0.12);
+  color: #dc3545;
+  border: 1.5px solid rgba(220, 53, 69, 0.3);
+}
+
+.btn-destructive-custom:hover:not(:disabled) {
+  background-color: #dc3545;
+  color: #ffffff;
 }
 
 @media (max-width: 576px) {

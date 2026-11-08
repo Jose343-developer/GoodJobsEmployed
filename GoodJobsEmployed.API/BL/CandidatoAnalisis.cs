@@ -179,7 +179,11 @@ public class CandidatoAnalisis
             {
                 responseMimeType = "application/json",
                 temperature = 0.2,
-                maxOutputTokens = 600
+                maxOutputTokens = 2048,
+                thinkingConfig = new
+                {
+                    thinkingBudget = 0
+                }
             }
         };
 

@@ -9,9 +9,9 @@
         <a routerLink="/perfiles" class="btn-apple btn-primary-custom text-decoration-none">
           Ver Perfiles
         </a>
-        <button type="button" class="btn-apple btn-secondary-custom">
+        <a routerLink="/perfiles" [queryParams]="{ crear: 'true' }" class="btn-apple btn-secondary-custom text-decoration-none">
           Agregar Perfiles
-        </button>
+        </a>
       </div>
     </div>
   </div>
